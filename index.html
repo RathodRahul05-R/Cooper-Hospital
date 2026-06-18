@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cooper University Hospital | Trusted Healthcare Portal</title>
+    <script>
+      (function() {
+        // Prevent benign unhandled HMR/WebSocket rejection noise from bubbling or triggering overlay alerts
+        window.addEventListener("unhandledrejection", function(event) {
+          var reason = event.reason;
+          var msg = reason ? (reason.message || String(reason)) : "";
+          if (msg.indexOf("WebSocket") !== -1 || msg.indexOf("websocket") !== -1 || msg.indexOf("vite") !== -1 || msg.indexOf("HMR") !== -1 || msg.indexOf("pre-warming") !== -1) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+          }
+        }, true);
+
+        window.addEventListener("error", function(event) {
+          var msg = event.message || "";
+          if (msg.indexOf("WebSocket") !== -1 || msg.indexOf("websocket") !== -1 || msg.indexOf("vite") !== -1 || msg.indexOf("HMR") !== -1 || msg.indexOf("pre-warming") !== -1) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+          }
+        }, true);
+
+        // Filter helper to determine if a log string belongs to benign HMR, sandbox rendering, or connecting logs
+        function isBenignHmrLog(text) {
+          if (!text) return false;
+          var lower = text.toLowerCase().trim();
+          
+          // Clear any HMR, Vite, WebSocket or development server reconnect warnings
+          if (lower.indexOf("websocket") !== -1 || 
+              lower.indexOf("web socket") !== -1 || 
+              lower.indexOf("vite") !== -1 || 
+              lower.indexOf("hmr") !== -1 || 
+              lower.indexOf("connection lost") !== -1 || 
+              lower.indexOf("polling for restart") !== -1 || 
+              lower.indexOf("connecting") !== -1 || 
+              lower.indexOf("connected") !== -1) {
+            return true;
+          }
+          
+          // Clear standard sandbox prewarming or hot-reloading messages
+          if (lower.indexOf("pre-warming") !== -1 || 
+              lower.indexOf("render start") !== -1 || 
+              lower.indexOf("render end") !== -1) {
+            return true;
+          }
+          
+          return false;
+        }
+
+        // Intercept all standard console methods to suppress HMR noise permanently
+        var consoleMethods = ["log", "info", "debug", "warn", "error"];
+        consoleMethods.forEach(function(method) {
+          var original = console[method];
+          if (!original) return;
+          console[method] = function() {
+            var args = Array.prototype.slice.call(arguments);
+            var combinedText = args.map(function(x) {
+              try {
+                return typeof x === 'object' ? JSON.stringify(x) : String(x);
+              } catch(e) {
+                return String(x);
+              }
+            }).join(" ");
+
+            if (isBenignHmrLog(combinedText)) {
+              return; // Suppress entirely from reaching the overlay console logger
+            }
+            original.apply(console, arguments);
+          };
+        });
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+

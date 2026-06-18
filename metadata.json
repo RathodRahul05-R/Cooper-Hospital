@@ -1,0 +1,6 @@
+{
+  "name": "Cooper University Hospital",
+  "description": "Premium, responsive healthcare portal for trusted patient care, medical consultation scheduling, and health insights.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
